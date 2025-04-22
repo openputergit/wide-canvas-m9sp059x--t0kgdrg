@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menteaszo - Your Mental Health Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(45deg, #6366f1, #8b5cf6, #d946ef);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+        }
+
+        .breathing-circle {
+            transition: transform 4s ease-in-out;
+            transform-origin: center;
+        }
+
+        .breathing-circle.expand {
+            transform: scale(1.5);
+        }
+
+        .garden-plant {
+            transition: transform 0.3s ease;
+        }
+
+        .garden-plant:hover {
+            transform: scale(1.1);
+        }
+
+        .anxiety-meter {
+            height: 200px;
+            background: linear-gradient(to top, #4ade80, #fbbf24, #ef4444);
+        }
+
+        .storm-cloud {
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+
+        .notification {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <!-- Navigation -->
+    <nav class="glass p-4 mb-8 flex justify-between items-center">
+        <h1 class="text-2xl font-bold">Menteaszo</h1>
+        <div class="flex gap-4">
+            <button class="px-4 py-2 rounded-full glass hover:bg-white/20 transition">Login</button>
+            <button class="px-4 py-2 rounded-full bg-white text-purple-600 hover:bg-opacity-90 transition">Sign Up</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="grid md:grid-cols-2 gap-8">
+        <!-- Mental Health Games Section -->
+        <div class="glass p-6">
+            <h2 class="text-xl font-semibold mb-4">Mental Health Games</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Breathing Game -->
+                <div class="glass p-4 cursor-pointer" onclick="startBreathingGame()">
+                    <div class="breathing-circle w-20 h-20 bg-white/30 rounded-full mx-auto mb-2"></div>
+                    <h3 class="text-center">Breathing Rhythm</h3>
+                </div>
+
+                <!-- Anxiety Garden -->
+                <div class="glass p-4 cursor-pointer" onclick="openAnxietyGarden()">
+                    <div class="garden-plant w-20 h-20 bg-green-400/30 rounded-lg mx-auto mb-2">
+                        <i class="bi bi-tree text-3xl flex justify-center pt-4"></i>
+                    </div>
+                    <h3 class="text-center">Anxiety Garden</h3>
+                </div>
+
+                <!-- Grounding Escape -->
+                <div class="glass p-4 cursor-pointer" onclick="startGroundingGame()">
+                    <div class="w-20 h-20 bg-blue-400/30 rounded-lg mx-auto mb-2">
+                        <i class="bi bi-grid-3x3 text-3xl flex justify-center pt-4"></i>
+                    </div>
+                    <h3 class="text-center">Grounding Escape</h3>
+                </div>
+
+                <!-- Calm the Storm -->
+                <div class="glass p-4 cursor-pointer" onclick="startStormGame()">
+                    <div class="w-20 h-20 bg-gray-400/30 rounded-lg mx-auto mb-2">
+                        <i class="bi bi-cloud text-3xl flex justify-center pt-4"></i>
+                    </div>
+                    <h3 class="text-center">Calm the Storm</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Friend Support -->
+        <div class="glass p-6">
+            <h2 class="text-xl font-semibold mb-4">AI Companion</h2>
+            <div class="h-[400px] glass p-4 mb-4 overflow-y-auto" id="chatContainer">
+                <!-- Chat messages will appear here -->
+            </div>
+            <div class="flex gap-2">
+                <input type="text" id="messageInput" class="glass w-full p-2 text-white placeholder-white/70" placeholder="Share your thoughts...">
+                <button onclick="sendMessage()" class="glass px-4 hover:bg-white/20 transition">
+                    <i class="bi bi-send"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Modals -->
+    <div id="breathingGameModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
+        <div class="glass p-8 max-w-md w-full m-4">
+            <h2 class="text-xl font-semibold mb-4">Breathing Exercise</h2>
+            <div class="breathing-circle w-32 h-32 bg-white/30 rounded-full mx-auto mb-4"></div>
+            <p class="text-center mb-4" id="breathingInstruction">Inhale...</p>
+            <button onclick="closeBreathingGame()" class="w-full glass p-2 hover:bg-white/20 transition">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Chat functionality
+        const messages = [];
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            messages.push({ text: message, sender: 'user' });
+            updateChat();
+            messageInput.value = '';
+
+            // AI response
+            setTimeout(() => {
+                const responses = [
+                    "I understand how you're feeling. Would you like to talk more about it?",
+                    "That sounds challenging. How can I help you through this?",
+                    "I'm here to listen. What would make you feel better right now?",
+                ];
+                messages.push({ text: responses[Math.floor(Math.random() * responses.length)], sender: 'ai' });
+                updateChat();
+            }, 1000);
+        }
+
+        function updateChat() {
+            chatContainer.innerHTML = messages.map(msg => `
+                <div class="mb-2 ${msg.sender === 'user' ? 'text-right' : ''}">
+                    <span class="glass inline-block px-4 py-2 rounded-2xl">
+                        ${msg.text}
+                    </span>
+                </div>
+            `).join('');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Breathing Game
+        let breathingInterval;
+        function startBreathingGame() {
+            document.getElementById('breathingGameModal').style.display = 'flex';
+            const circle = document.querySelector('#breathingGameModal .breathing-circle');
+            const instruction = document.getElementById('breathingInstruction');
+            
+            breathingInterval = setInterval(() => {
+                circle.classList.toggle('expand');
+                instruction.textContent = circle.classList.contains('expand') ? 'Exhale...' : 'Inhale...';
+            }, 4000);
+        }
+
+        function closeBreathingGame() {
+            document.getElementById('breathingGameModal').style.display = 'none';
+            clearInterval(breathingInterval);
+        }
+
+        // Mobile touch events
+        document.addEventListener('touchstart', function(e) {
+            if (e.target.closest('.glass')) {
+                e.target.closest('.glass').style.opacity = '0.8';
+            }
+        });
+
+        document.addEventListener('touchend', function(e) {
+            if (e.target.closest('.glass')) {
+                e.target.closest('.glass').style.opacity = '1';
+            }
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
